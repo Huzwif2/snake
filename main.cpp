@@ -1,5 +1,4 @@
-// TODO: Create a constructor for Tile object 
-//       16:44
+// TODO: Make snake eat food 47:22
 #include <raylib.h>
 #include <iostream>
 #include <deque>
@@ -17,6 +16,14 @@ const Vector2 UP = {0,-1};
 const Vector2 DOWN = {0,1};
 const Vector2 LEFT = {-1,0};
 const Vector2 RIGHT = {1,0};
+
+bool InDeque(Vector2 element, deque<Vector2> deque) {
+    for (unsinged in i = 0; i < deque.size(); i++) {
+        if (Vector2Equals(deque[i], element)) {
+            return true;
+        }
+    }
+    return false
 
 
 bool eventTriggered(double interval) {
@@ -71,13 +78,14 @@ class Food {
 
 
         void Draw() {
-            DrawTextureEx(texture, {(position.x * cellSize), (position.y * cellSize)}, 0, 0.03, WHITE);
+            DrawTextureEx(texture, {(position.x * cellSize), (position.y * cellSize)}, 0, 0.015, WHITE);
         }
 
-        Vector2 RandomPos() {
+        Vector2 RandomPos(deque<Vector2> snakeBody) {
             float x = GetRandomValue(0, cellCount - 1);
             float y = GetRandomValue(0, cellCount - 1);
-            return Vector2{x, y};
+            Vector2 position = {x,y};
+
         }
 };
 
@@ -98,7 +106,8 @@ public:
 
     void CheckCollisionWithFood() {
         if (Vector2Equals(snake.body[0], food.position)) {
-            cout << "Nom Nom Nom" << endl;
+            food.position = food.RandomPos();
+
         }
     }
 };
