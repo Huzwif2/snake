@@ -1,4 +1,4 @@
-// TODO: Make snake eat food 47:22
+// TODO: Edge collision detection 56:00
 #include <raylib.h>
 #include <iostream>
 #include <deque>
@@ -17,13 +17,14 @@ const Vector2 DOWN = {0,1};
 const Vector2 LEFT = {-1,0};
 const Vector2 RIGHT = {1,0};
 
-bool InDeque(Vector2 element, deque<Vector2> deque) {
-    for (unsinged in i = 0; i < deque.size(); i++) {
+bool ElementInDeque(Vector2 element, deque<Vector2> deque) {
+    for (unsigned int i = 0; i < deque.size(); i++) {
         if (Vector2Equals(deque[i], element)) {
             return true;
         }
     }
-    return false
+    return false;
+}
 
 
 bool eventTriggered(double interval) {
@@ -42,6 +43,7 @@ class Snake {
     public: 
         deque<Vector2> body = {Vector2{7,7}, Vector2{6,7}, Vector2{5,7}};
         Vector2 direction = {1,0};
+        bool addSegment = false;
 
         void Draw() {
             for(unsigned int i = 0; i < body.size(); i++) {
@@ -53,10 +55,14 @@ class Snake {
         }
 
         void Update() {
-            body.pop_back();
             body.push_front(Vector2Add(body[0], direction));
+            if (addSegment == true) {
+                addSegment = false;
+            }
+            else {
+                body.pop_back();
+            }
         }
-
 };
 
 class Food {
@@ -65,11 +71,11 @@ class Food {
         Vector2 position; 
         Texture2D texture;
 
-        Food() {
+        Food(deque<Vector2> snakeBody) {
             Image image = LoadImage("graphics/burger.png");
             texture = LoadTextureFromImage(image);
             UnloadImage(image);
-            position = RandomPos();
+            position = GenRandomPos(snakeBody);
         }
 
         ~Food() {
@@ -81,35 +87,43 @@ class Food {
             DrawTextureEx(texture, {(position.x * cellSize), (position.y * cellSize)}, 0, 0.015, WHITE);
         }
 
-        Vector2 RandomPos(deque<Vector2> snakeBody) {
+        Vector2 GenRandomCell() {
             float x = GetRandomValue(0, cellCount - 1);
             float y = GetRandomValue(0, cellCount - 1);
-            Vector2 position = {x,y};
+            return Vector2{x,y};
+        }
 
+        Vector2 GenRandomPos(deque<Vector2> snakeBody) {
+            Vector2 position = GenRandomCell(); 
+            while (ElementInDeque(position, snakeBody)) {
+                position = GenRandomCell();
+            }
+            return position;
         }
 };
 
 class Game {
-public:
-    Snake snake = Snake();
-    Food food = Food();
+    public:
+        Snake snake = Snake();
+        Food food = Food(snake.body);
 
-    void Draw() {
-        food.Draw();
-        snake.Draw();
-    }
-
-    void Update() {
-        snake.Update();
-        CheckCollisionWithFood();
-    }
-
-    void CheckCollisionWithFood() {
-        if (Vector2Equals(snake.body[0], food.position)) {
-            food.position = food.RandomPos();
-
+        void Draw() {
+            food.Draw();
+            snake.Draw();
         }
-    }
+
+        void Update() {
+            snake.Update();
+            CheckCollisionWithFood();
+        }
+
+        void CheckCollisionWithFood() {
+            if (Vector2Equals(snake.body[0], food.position)) {
+                food.position = food.GenRandomPos(snake.body);
+                snake.addSegment = true;
+
+            }
+        }
 };
 
 
